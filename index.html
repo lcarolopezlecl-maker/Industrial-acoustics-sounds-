@@ -126,4 +126,194 @@
       <label>2. Why did you stop the sound?</label>
       <label class="radio-option"><input type="radio" name="stopReason" value="Uncomfortable/Painful"> It became physically uncomfortable or painful</label>
       <label class="radio-option"><input type="radio" name="stopReason" value="Irritating/Distracting"> It was too irritating or distracting</label>
-      <label class="radio-option"><input type="radio" name="stopReason" value="Anxious/Stressed"> It made me feel anxious or stressed
+      <label class="radio-option"><input type="radio" name="stopReason" value="Anxious/Stressed"> It made me feel anxious or stressed</label>
+    </div>
+
+    <div class="form-group">
+      <label id="assocLabel">3. What object, machine, or color did this sound remind you of? (Optional)</label>
+      <input type="text" id="assocInput" placeholder="e.g., drill, mosquito, alarm, sharp yellow...">
+    </div>
+
+    <div class="center">
+      <button class="btn-next" type="button" onclick="submitSoundAnswers()">Save & Continue →</button>
+    </div>
+  </div>
+
+  <!-- COOLDOWN SCREEN -->
+  <div id="cooldownScreen" class="hidden center">
+    <div class="status" id="cooldownText"></div>
+    <button class="btn-next hidden" id="nextBtn" onclick="prepareNext()">Continue to Next Sound →</button>
+  </div>
+
+  <audio id="player"></audio>
+</div>
+
+<script>
+  // PASTE YOUR SURVEYXACT SELFCREATION LINK BELOW:
+  const SURVEYXACT_URL = "https://www.survey-xact.dk/LinkCollector?key=5TG69D7CJJCK";
+
+  const sounds = [
+    { num: "01", file: "sound01.mp3" }, { num: "02", file: "sound02.mp3" },
+    { num: "03", file: "sound03.mp3" }, { num: "04", file: "sound04.mp3" },
+    { num: "05", file: "sound05.mp3" }, { num: "06", file: "sound06.mp3" },
+    { num: "07", file: "sound07.mp3" }, { num: "08", file: "sound08.mp3" },
+    { num: "09", file: "sound09.mp3" }, { num: "10", file: "sound10.mp3" },
+    { num: "11", file: "sound11.mp3" }, { num: "12", file: "sound12.mp3" }
+  ];
+
+  // Unbiased Fisher-Yates shuffle
+  for (let i = sounds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sounds[i], sounds[j]] = [sounds[j], sounds[i]];
+  }
+
+  let currentIndex = 0;
+  let calPlayed = false;
+  let tempScale = { sens: null, annoy: null };
+  let wasStoppedEarly = false;
+  let results = {};
+  let playOrder = [];
+  const player = document.getElementById("player");
+
+  function playCalibration() {
+    player.src = "volumecheck.mp3";
+    player.play();
+    calPlayed = true;
+  }
+
+  function selectScale(type, val, btn) {
+    tempScale[type] = val;
+    const container = btn.parentElement;
+    container.querySelectorAll(".scale-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+  }
+
+  function startExperiment() {
+    const gender = document.getElementById("gender").value;
+    const age = document.getElementById("age").value;
+    const device = document.getElementById("device").value;
+    if (!calPlayed) { alert("Please play the Volume Check first."); return; }
+    if (!gender || !age || !device || tempScale.sens === null) {
+      alert("Please answer all 4 initial questions before starting.");
+      return;
+    }
+    player.pause();
+    results["gender"] = gender;
+    results["age"] = age;
+    results["device"] = device;
+    results["sensitivity"] = tempScale.sens;
+
+    document.getElementById("setupScreen").classList.add("hidden");
+    showAudioScreen();
+  }
+
+  function showAudioScreen() {
+    document.getElementById("stepBadge").innerText = `Sound ${currentIndex + 1} of 12`;
+    document.getElementById("title").innerText = `Listening Clip #${currentIndex + 1}`;
+    document.getElementById("audioScreen").classList.remove("hidden");
+    document.getElementById("playBtn").style.display = "inline-block";
+    document.getElementById("stopBtn").style.display = "none";
+    document.getElementById("statusText").innerHTML =
+      "Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.";
+  }
+
+  function startSound() {
+    const current = sounds[currentIndex];
+    player.src = current.file;
+    player.play();
+    document.getElementById("playBtn").style.display = "none";
+    document.getElementById("stopBtn").style.display = "inline-block";
+    document.getElementById("statusText").innerHTML =
+      "<strong>Playing...</strong><br>Click <em>Stop</em> immediately if you no longer want to tolerate this sound.";
+    player.onended = () => stopSound(true);
+  }
+
+  function stopSound(completedFullClip) {
+    const elapsed = completedFullClip ? player.duration.toFixed(2) : player.currentTime.toFixed(2);
+    player.pause();
+    player.onended = null;
+
+    const current = sounds[currentIndex];
+    results[`t_s${current.num}`] = elapsed;
+    playOrder.push(current.num);
+    wasStoppedEarly = !completedFullClip;
+
+    tempScale.annoy = null;
+    document.querySelectorAll("#annoyScale .scale-btn").forEach(b => b.classList.remove("selected"));
+    document.querySelectorAll('input[name="stopReason"]').forEach(r => r.checked = false);
+    document.getElementById("assocInput").value = "";
+
+    document.getElementById("audioScreen").classList.add("hidden");
+    document.getElementById("questionScreen").classList.remove("hidden");
+    document.getElementById("recordedBanner").innerHTML = `Listening time recorded: <strong>${elapsed}s</strong>`;
+
+    if (wasStoppedEarly) {
+      document.getElementById("reasonGroup").classList.remove("hidden");
+      document.getElementById("assocLabel").innerText = "3. What object, machine, or color did this sound remind you of? (Optional)";
+    } else {
+      document.getElementById("reasonGroup").classList.add("hidden");
+      document.getElementById("assocLabel").innerText = "2. What object, machine, or color did this sound remind you of? (Optional)";
+    }
+  }
+
+  function submitSoundAnswers() {
+    if (tempScale.annoy === null) {
+      alert("Please select an annoyance rating from 0 to 10.");
+      return;
+    }
+    let reasonVal = "Completed";
+    if (wasStoppedEarly) {
+      const checked = document.querySelector('input[name="stopReason"]:checked');
+      if (!checked) {
+        alert("Please select why you stopped the sound.");
+        return;
+      }
+      reasonVal = checked.value;
+    }
+
+    const current = sounds[currentIndex];
+    results[`annoy_s${current.num}`] = tempScale.annoy;
+    results[`reason_s${current.num}`] = reasonVal;
+    results[`assoc_s${current.num}`] = document.getElementById("assocInput").value.trim() || "None";
+
+    document.getElementById("questionScreen").classList.add("hidden");
+
+    if (currentIndex === sounds.length - 1) {
+      finishExperiment();
+      return;
+    }
+
+    document.getElementById("cooldownScreen").classList.remove("hidden");
+    document.getElementById("nextBtn").classList.add("hidden");
+    let cooldown = 15;
+    document.getElementById("cooldownText").innerHTML =
+      `Answers saved.<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
+
+    const timer = setInterval(() => {
+      cooldown--;
+      if (cooldown > 0) {
+        document.getElementById("cooldownText").innerHTML =
+          `Answers saved.<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
+      } else {
+        clearInterval(timer);
+        document.getElementById("cooldownText").innerHTML = "Rest complete. Click below when ready.";
+        document.getElementById("nextBtn").classList.remove("hidden");
+      }
+    }, 1000);
+  }
+
+  function prepareNext() {
+    currentIndex++;
+    document.getElementById("cooldownScreen").classList.add("hidden");
+    showAudioScreen();
+  }
+
+  function finishExperiment() {
+    results["play_order"] = playOrder.join("-");
+    const params = new URLSearchParams(results).toString();
+    const sep = SURVEYXACT_URL.includes("?") ? "&" : "?";
+    window.location.href = `${SURVEYXACT_URL}${sep}${params}`;
+  }
+</script>
+</body>
+</html>
