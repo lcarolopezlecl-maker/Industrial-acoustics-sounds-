@@ -19,14 +19,14 @@
 </head>
 <body>
 <div class="card">
-  <div class="badge" id="stepBadge">Step 0 of 12 — Calibration</div>
+  <div class="badge" id="stepBadge">Step 0 of 12 — Volume Check</div>
   <h2 id="title">Speaker Volume Calibration</h2>
   <div class="status" id="statusText">
     Sit in a quiet room and use your <strong>computer speakers</strong> (not headphones).<br><br>
-    Play the voice check below and adjust your volume so it sounds like clear, normal conversation. <strong>Do not change your volume after this step.</strong>
+    Play the volume check below and adjust your speaker volume so you can hear the voice clearly at a comfortable conversational level. <strong>Do not change your volume after this step.</strong>
   </div>
 
-  <button class="btn-primary" id="calPlayBtn" onclick="playCalibration()">▶ Play Voice Calibration</button>
+  <button class="btn-primary" id="calPlayBtn" onclick="playCalibration()">▶ Play Volume Check</button>
   <button class="btn-next" id="calDoneBtn" onclick="startExperiment()">Volume is Set — Start Test →</button>
 
   <button class="btn-primary" id="playBtn" style="display:none;" onclick="startSound()">▶ Play Sound</button>
@@ -37,9 +37,10 @@
 </div>
 
 <script>
-  // PASTE YOUR SURVEYXACT LINK BETWEEN THE QUOTES BELOW:
+  // 1. PASTE YOUR SURVEYXACT LINK BETWEEN THE QUOTES BELOW:
   const SURVEYXACT_URL = "https://www.survey-xact.dk/LinkCollector?key=REPLACE_WITH_YOUR_KEY";
 
+  // 2. All 12 test sounds (will be completely randomized for each participant):
   const sounds = [
     { id: "t_s01", num: "01", file: "sound01.mp3" },
     { id: "t_s02", num: "02", file: "sound02.mp3" },
@@ -55,8 +56,11 @@
     { id: "t_s12", num: "12", file: "sound12.mp3" }
   ];
 
-  // Randomize order for each participant
-  sounds.sort(() => Math.random() - 0.5);
+  // Unbiased Fisher-Yates shuffle for all 12 sounds
+  for (let i = sounds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sounds[i], sounds[j]] = [sounds[j], sounds[i]];
+  }
 
   let currentIndex = 0;
   let results = {};
@@ -64,20 +68,20 @@
   const player = document.getElementById("player");
 
   function playCalibration() {
-    player.src = "calibration.mp3";
+    player.src = "volumecheck.mp3";
     player.play();
     document.getElementById("calDoneBtn").style.display = "inline-block";
   }
 
   function startExperiment() {
     player.pause();
+    player.currentTime = 0;
     document.getElementById("calPlayBtn").style.display = "none";
     document.getElementById("calDoneBtn").style.display = "none";
     updateScreenForSound();
   }
 
   function updateScreenForSound() {
-    const s = sounds[currentIndex];
     document.getElementById("stepBadge").innerText = `Sound ${currentIndex + 1} of 12`;
     document.getElementById("title").innerText = `Listening Clip #${currentIndex + 1}`;
     document.getElementById("statusText").innerHTML =
