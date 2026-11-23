@@ -5,142 +5,125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acoustics Disturbance Tolerance Test</title>
 <style>
-  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 20px; background: #f4f6f9; color: #222; }
-  .card { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); text-align: center; }
-  h2 { margin-top: 0; }
-  button { padding: 14px 26px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: 600; transition: opacity 0.2s; }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 680px; margin: 30px auto; padding: 16px; background: #f4f6f9; color: #222; }
+  .card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+  h2 { margin-top: 0; text-align: center; }
+  .center { text-align: center; }
+  button { padding: 13px 24px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin: 6px; font-weight: 600; transition: opacity 0.2s, transform 0.1s; }
+  button:active { transform: scale(0.98); }
   .btn-primary { background: #0d6efd; color: #fff; }
-  .btn-stop { background: #dc3545; color: #fff; display: none; }
-  .btn-next { background: #198754; color: #fff; display: none; }
-  .status { font-size: 17px; margin: 22px 0; line-height: 1.5; background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef; }
-  .badge { display: inline-block; background: #e7f1ff; color: #084298; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .btn-stop { background: #dc3545; color: #fff; display: none; font-size: 17px; padding: 16px 28px; }
+  .btn-next { background: #198754; color: #fff; }
+  .status { font-size: 16px; margin: 18px 0; line-height: 1.5; background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef; text-align: center; }
+  .badge { display: inline-block; background: #e7f1ff; color: #084298; padding: 4px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .form-group { margin-bottom: 18px; text-align: left; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 15px; }
+  select, input[type="text"] { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
+  .scale-row { display: flex; justify-content: space-between; gap: 4px; margin-top: 6px; }
+  .scale-btn { flex: 1; padding: 10px 0; margin: 0; background: #e9ecef; color: #222; border-radius: 6px; font-size: 14px; }
+  .scale-btn.selected { background: #0d6efd; color: #fff; }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-top: 4px; }
+  .radio-option { display: block; background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
+  .radio-option input { margin-right: 10px; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="badge" id="stepBadge">Step 0 of 12 — Volume Check</div>
-  <h2 id="title">Speaker Volume Calibration</h2>
-  <div class="status" id="statusText">
-    Sit in a quiet room and use your <strong>computer speakers</strong> (not headphones).<br><br>
-    Play the volume check below and adjust your speaker volume so you can hear the voice clearly at a comfortable conversational level. <strong>Do not change your volume after this step.</strong>
+  <div class="center">
+    <div class="badge" id="stepBadge">Step 0 of 12 — Setup & Calibration</div>
+    <h2 id="title">Volume Calibration & Participant Info</h2>
   </div>
 
-  <button class="btn-primary" id="calPlayBtn" onclick="playCalibration()">▶ Play Volume Check</button>
-  <button class="btn-next" id="calDoneBtn" onclick="startExperiment()">Volume is Set — Start Test →</button>
+  <!-- STEP 0: CALIBRATION & DEMOGRAPHICS -->
+  <div id="setupScreen">
+    <div class="status">
+      Sit in a quiet room. Play the voice check below and adjust your volume to a comfortable conversational level. <strong>Do not change your volume afterward.</strong><br><br>
+      <button class="btn-primary" type="button" onclick="playCalibration()">▶ Play Volume Check</button>
+    </div>
 
-  <button class="btn-primary" id="playBtn" style="display:none;" onclick="startSound()">▶ Play Sound</button>
-  <button class="btn-stop" id="stopBtn" onclick="stopSound(false)">⏹ Stop (Too Annoying / Uncomfortable)</button>
-  <button class="btn-next" id="nextBtn" onclick="prepareNext()">Continue to Next Sound →</button>
+    <div class="form-group">
+      <label>1. Gender</label>
+      <select id="gender">
+        <option value="">-- Select --</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+        <option value="Non-binary/Other">Non-binary / Other</option>
+        <option value="Prefer not to say">Prefer not to say</option>
+      </select>
+    </div>
 
-  <audio id="player"></audio>
-</div>
+    <div class="form-group">
+      <label>2. Age group</label>
+      <select id="age">
+        <option value="">-- Select --</option>
+        <option value="18-25">18–25</option>
+        <option value="26-35">26–35</option>
+        <option value="36-50">36–50</option>
+        <option value="51+">51+</option>
+      </select>
+    </div>
 
-<script>
-  // 1. PASTE YOUR SURVEYXACT LINK BETWEEN THE QUOTES BELOW:
-  const SURVEYXACT_URL = "https://www.survey-xact.dk/LinkCollector?key=5TG69D7CJJCK";
+    <div class="form-group">
+      <label>3. Playback device</label>
+      <select id="device">
+        <option value="">-- Select --</option>
+        <option value="Headphones">Headphones (Over-ear / Earbuds)</option>
+        <option value="Laptop/Phone speakers">Laptop / Phone speakers</option>
+        <option value="External speakers">External desk speakers</option>
+      </select>
+    </div>
 
-  // 2. All 12 test sounds (will be completely randomized for each participant):
-  const sounds = [
-    { id: "t_s01", num: "01", file: "sound01.mp3" },
-    { id: "t_s02", num: "02", file: "sound02.mp3" },
-    { id: "t_s03", num: "03", file: "sound03.mp3" },
-    { id: "t_s04", num: "04", file: "sound04.mp3" },
-    { id: "t_s05", num: "05", file: "sound05.mp3" },
-    { id: "t_s06", num: "06", file: "sound06.mp3" },
-    { id: "t_s07", num: "07", file: "sound07.mp3" },
-    { id: "t_s08", num: "08", file: "sound08.mp3" },
-    { id: "t_s09", num: "09", file: "sound09.mp3" },
-    { id: "t_s10", num: "10", file: "sound10.mp3" },
-    { id: "t_s11", num: "11", file: "sound11.mp3" },
-    { id: "t_s12", num: "12", file: "sound12.mp3" }
-  ];
+    <div class="form-group">
+      <label>4. General noise sensitivity: "I am easily bothered by everyday background noises."</label>
+      <div class="scale-row" id="sensScale">
+        <button type="button" class="scale-btn" onclick="selectScale('sens', 1, this)">1</button>
+        <button type="button" class="scale-btn" onclick="selectScale('sens', 2, this)">2</button>
+        <button type="button" class="scale-btn" onclick="selectScale('sens', 3, this)">3</button>
+        <button type="button" class="scale-btn" onclick="selectScale('sens', 4, this)">4</button>
+        <button type="button" class="scale-btn" onclick="selectScale('sens', 5, this)">5</button>
+      </div>
+      <div class="scale-labels"><span>1 = Strongly disagree</span><span>5 = Strongly agree</span></div>
+    </div>
 
-  // Unbiased Fisher-Yates shuffle for all 12 sounds
-  for (let i = sounds.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [sounds[i], sounds[j]] = [sounds[j], sounds[i]];
-  }
+    <div class="center">
+      <button class="btn-next" type="button" onclick="startExperiment()">Start Listening Test →</button>
+    </div>
+  </div>
 
-  let currentIndex = 0;
-  let results = {};
-  let playOrder = [];
-  const player = document.getElementById("player");
+  <!-- AUDIO PLAYER SCREEN -->
+  <div id="audioScreen" class="hidden center">
+    <div class="status" id="statusText">
+      Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.
+    </div>
+    <button class="btn-primary" id="playBtn" onclick="startSound()">▶ Play Sound</button>
+    <button class="btn-stop" id="stopBtn" onclick="stopSound(false)">⏹ Stop (Too Annoying / Uncomfortable)</button>
+  </div>
 
-  function playCalibration() {
-    player.src = "volumecheck.mp3";
-    player.play();
-    document.getElementById("calDoneBtn").style.display = "inline-block";
-  }
+  <!-- PER-SOUND QUESTIONS SCREEN -->
+  <div id="questionScreen" class="hidden">
+    <div class="status" id="recordedBanner"></div>
 
-  function startExperiment() {
-    player.pause();
-    player.currentTime = 0;
-    document.getElementById("calPlayBtn").style.display = "none";
-    document.getElementById("calDoneBtn").style.display = "none";
-    updateScreenForSound();
-  }
+    <div class="form-group">
+      <label>1. How much did this sound bother, disturb, or annoy you? (0–10)</label>
+      <div class="scale-row" id="annoyScale">
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 0, this)">0</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 1, this)">1</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 2, this)">2</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 3, this)">3</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 4, this)">4</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 5, this)">5</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 6, this)">6</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 7, this)">7</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 8, this)">8</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 9, this)">9</button>
+        <button type="button" class="scale-btn" onclick="selectScale('annoy', 10, this)">10</button>
+      </div>
+      <div class="scale-labels"><span>0 = Not at all</span><span>10 = Extremely</span></div>
+    </div>
 
-  function updateScreenForSound() {
-    document.getElementById("stepBadge").innerText = `Sound ${currentIndex + 1} of 12`;
-    document.getElementById("title").innerText = `Listening Clip #${currentIndex + 1}`;
-    document.getElementById("statusText").innerHTML =
-      "Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.";
-    document.getElementById("playBtn").style.display = "inline-block";
-  }
-
-  function startSound() {
-    const current = sounds[currentIndex];
-    player.src = current.file;
-    player.play();
-    document.getElementById("playBtn").style.display = "none";
-    document.getElementById("stopBtn").style.display = "inline-block";
-    document.getElementById("statusText").innerHTML =
-      "<strong>Playing...</strong><br>Click <em>Stop</em> immediately if you no longer want to tolerate this sound.";
-
-    player.onended = () => stopSound(true);
-  }
-
-  function stopSound(completedFullClip) {
-    const elapsed = completedFullClip ? player.duration.toFixed(2) : player.currentTime.toFixed(2);
-    player.pause();
-    player.onended = null;
-
-    const current = sounds[currentIndex];
-    results[current.id] = elapsed;
-    playOrder.push(current.num);
-
-    document.getElementById("stopBtn").style.display = "none";
-    let cooldown = 15;
-    document.getElementById("statusText").innerHTML =
-      `Time recorded (${elapsed}s).<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
-
-    const timer = setInterval(() => {
-      cooldown--;
-      if (cooldown > 0) {
-        document.getElementById("statusText").innerHTML =
-          `Time recorded (${elapsed}s).<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
-      } else {
-        clearInterval(timer);
-        document.getElementById("statusText").innerHTML = "Rest complete. Click below when ready.";
-        document.getElementById("nextBtn").style.display = "inline-block";
-      }
-    }, 1000);
-  }
-
-  function prepareNext() {
-    currentIndex++;
-    document.getElementById("nextBtn").style.display = "none";
-
-    if (currentIndex < sounds.length) {
-      updateScreenForSound();
-    } else {
-      results["play_order"] = playOrder.join("-");
-      const params = new URLSearchParams(results).toString();
-      const sep = SURVEYXACT_URL.includes("?") ? "&" : "?";
-      window.location.href = `${SURVEYXACT_URL}${sep}${params}`;
-    }
-  }
-</script>
-</body>
-</html>
+    <div class="form-group hidden" id="reasonGroup">
+      <label>2. Why did you stop the sound?</label>
+      <label class="radio-option"><input type="radio" name="stopReason" value="Uncomfortable/Painful"> It became physically uncomfortable or painful</label>
+      <label class="radio-option"><input type="radio" name="stopReason" value="Irritating/Distracting"> It was too irritating or distracting</label>
+      <label class="radio-option"><input type="radio" name="stopReason" value="Anxious/Stressed"> It made me feel anxious or stressed
