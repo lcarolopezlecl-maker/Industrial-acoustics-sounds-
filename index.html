@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acoustics Disturbance Tolerance Test</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 40px auto; padding: 20px; background: #f4f6f9; color: #222; }
+  .card { background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); text-align: center; }
+  h2 { margin-top: 0; }
+  button { padding: 14px 26px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin: 8px; font-weight: 600; transition: opacity 0.2s; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: #0d6efd; color: #fff; }
+  .btn-stop { background: #dc3545; color: #fff; display: none; }
+  .btn-next { background: #198754; color: #fff; display: none; }
+  .status { font-size: 17px; margin: 22px 0; line-height: 1.5; background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef; }
+  .badge { display: inline-block; background: #e7f1ff; color: #084298; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="badge" id="stepBadge">Step 0 of 12 — Calibration</div>
+  <h2 id="title">Speaker Volume Calibration</h2>
+  <div class="status" id="statusText">
+    Sit in a quiet room and use your <strong>computer speakers</strong> (not headphones).<br><br>
+    Play the voice check below and adjust your volume so it sounds like clear, normal conversation. <strong>Do not change your volume after this step.</strong>
+  </div>
+
+  <button class="btn-primary" id="calPlayBtn" onclick="playCalibration()">▶ Play Voice Calibration</button>
+  <button class="btn-next" id="calDoneBtn" onclick="startExperiment()">Volume is Set — Start Test →</button>
+
+  <button class="btn-primary" id="playBtn" style="display:none;" onclick="startSound()">▶ Play Sound</button>
+  <button class="btn-stop" id="stopBtn" onclick="stopSound(false)">⏹ Stop (Too Annoying / Uncomfortable)</button>
+  <button class="btn-next" id="nextBtn" onclick="prepareNext()">Continue to Next Sound →</button>
+
+  <audio id="player"></audio>
+</div>
+
+<script>
+  // PASTE YOUR SURVEYXACT LINK BETWEEN THE QUOTES BELOW:
+  const SURVEYXACT_URL = "https://www.survey-xact.dk/LinkCollector?key=REPLACE_WITH_YOUR_KEY";
+
+  const sounds = [
+    { id: "t_s01", num: "01", file: "sound01.mp3" },
+    { id: "t_s02", num: "02", file: "sound02.mp3" },
+    { id: "t_s03", num: "03", file: "sound03.mp3" },
+    { id: "t_s04", num: "04", file: "sound04.mp3" },
+    { id: "t_s05", num: "05", file: "sound05.mp3" },
+    { id: "t_s06", num: "06", file: "sound06.mp3" },
+    { id: "t_s07", num: "07", file: "sound07.mp3" },
+    { id: "t_s08", num: "08", file: "sound08.mp3" },
+    { id: "t_s09", num: "09", file: "sound09.mp3" },
+    { id: "t_s10", num: "10", file: "sound10.mp3" },
+    { id: "t_s11", num: "11", file: "sound11.mp3" },
+    { id: "t_s12", num: "12", file: "sound12.mp3" }
+  ];
+
+  // Randomize order for each participant
+  sounds.sort(() => Math.random() - 0.5);
+
+  let currentIndex = 0;
+  let results = {};
+  let playOrder = [];
+  const player = document.getElementById("player");
+
+  function playCalibration() {
+    player.src = "calibration.mp3";
+    player.play();
+    document.getElementById("calDoneBtn").style.display = "inline-block";
+  }
+
+  function startExperiment() {
+    player.pause();
+    document.getElementById("calPlayBtn").style.display = "none";
+    document.getElementById("calDoneBtn").style.display = "none";
+    updateScreenForSound();
+  }
+
+  function updateScreenForSound() {
+    const s = sounds[currentIndex];
+    document.getElementById("stepBadge").innerText = `Sound ${currentIndex + 1} of 12`;
+    document.getElementById("title").innerText = `Listening Clip #${currentIndex + 1}`;
+    document.getElementById("statusText").innerHTML =
+      "Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.";
+    document.getElementById("playBtn").style.display = "inline-block";
+  }
+
+  function startSound() {
+    const current = sounds[currentIndex];
+    player.src = current.file;
+    player.play();
+    document.getElementById("playBtn").style.display = "none";
+    document.getElementById("stopBtn").style.display = "inline-block";
+    document.getElementById("statusText").innerHTML =
+      "<strong>Playing...</strong><br>Click <em>Stop</em> immediately if you no longer want to tolerate this sound.";
+
+    player.onended = () => stopSound(true);
+  }
+
+  function stopSound(completedFullClip) {
+    const elapsed = completedFullClip ? player.duration.toFixed(2) : player.currentTime.toFixed(2);
+    player.pause();
+    player.onended = null;
+
+    const current = sounds[currentIndex];
+    results[current.id] = elapsed;
+    playOrder.push(current.num);
+
+    document.getElementById("stopBtn").style.display = "none";
+    let cooldown = 15;
+    document.getElementById("statusText").innerHTML =
+      `Time recorded (${elapsed}s).<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
+
+    const timer = setInterval(() => {
+      cooldown--;
+      if (cooldown > 0) {
+        document.getElementById("statusText").innerHTML =
+          `Time recorded (${elapsed}s).<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
+      } else {
+        clearInterval(timer);
+        document.getElementById("statusText").innerHTML = "Rest complete. Click below when ready.";
+        document.getElementById("nextBtn").style.display = "inline-block";
+      }
+    }, 1000);
+  }
+
+  function prepareNext() {
+    currentIndex++;
+    document.getElementById("nextBtn").style.display = "none";
+
+    if (currentIndex < sounds.length) {
+      updateScreenForSound();
+    } else {
+      results["play_order"] = playOrder.join("-");
+      const params = new URLSearchParams(results).toString();
+      const sep = SURVEYXACT_URL.includes("?") ? "&" : "?";
+      window.location.href = `${SURVEYXACT_URL}${sep}${params}`;
+    }
+  }
+</script>
+</body>
+</html>
