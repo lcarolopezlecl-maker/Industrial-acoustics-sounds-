@@ -20,12 +20,14 @@
     .likert-row label { flex: 1 1 42px; text-align: center; padding: 8px 4px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
     .likert-row input:checked + span, .radio-group input:checked + span { font-weight: 700; color: #1d4ed8; }
     input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
-    audio { width: 100%; margin: 12px 0; }
+    audio.cal-audio { width: 100%; margin: 12px 0; }
     .btn { background: #2563eb; color: #fff; border: none; padding: 12px 22px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 8px; }
     .btn:hover { background: #1d4ed8; }
-    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    .btn-stop { background: #dc2626; width: 100%; font-size: 1.05rem; padding: 14px; }
+    .btn-play-main { background: #2563eb; width: 100%; font-size: 1.1rem; padding: 16px; margin-top: 12px; }
+    .btn-play-main:hover { background: #1d4ed8; }
+    .btn-stop { background: #dc2626; width: 100%; font-size: 1.1rem; padding: 16px; margin-top: 12px; }
     .btn-stop:hover { background: #b91c1c; }
+    .status-banner { text-align: center; padding: 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; font-weight: 600; margin-top: 12px; }
     .progress { font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
     .hidden { display: none; }
     .error { color: #dc2626; font-weight: 600; margin-top: 10px; }
@@ -38,7 +40,7 @@
     <!-- STEP 0: WELCOME & DEMOGRAPHICS -->
     <div id="step-welcome">
       <h1>Industrial Acoustics Perception Test</h1>
-      <p>Thank you for participating in our listening study! You will listen to <strong>12 short sound clips</strong> (around 5–7 minutes total).</p>
+      <p>Thank you for participating in our listening study! You will listen to <strong>12 short sound clips</strong> (around 4 minutes total).</p>
       <div class="gdpr-box">
         <strong>Privacy & Consent (GDPR):</strong> Participation is voluntary and completely anonymous. No personally identifiable information (name, email, or IP address) is collected, and responses are used solely for an academic course project at the University of Southern Denmark (SDU).
       </div>
@@ -46,7 +48,7 @@
       <div class="question">
         <label class="q-title">Step 1: Volume Calibration</label>
         <p>Please use <strong>laptop/PC speakers</strong> if possible. Play the calibration clip below and set your computer volume to a comfortable conversational level, then leave your volume unchanged for the rest of the test.</p>
-        <audio id="vol-audio" controls src="volumecheck.mp3"></audio>
+        <audio id="vol-audio" class="cal-audio" controls src="volumecheck.mp3"></audio>
       </div>
 
       <div class="question">
@@ -98,9 +100,16 @@
     <div id="step-listen" class="hidden">
       <div class="progress" id="listen-progress">Sound 1 of 12</div>
       <h2>Listen to the Sound Clip</h2>
-      <p>Press <strong>Play</strong> below. Listen until the clip finishes naturally, <strong>OR</strong> click the red <strong>"Stop Sound (Too Annoying)"</strong> button the exact moment it becomes too annoying to tolerate.</p>
-      <audio id="test-audio" controls></audio>
-      <button id="stop-btn" class="btn btn-stop" onclick="stopSoundEarly()" disabled>Stop Sound (Too Annoying)</button>
+      <p>Click the blue button below to play the sound. Listen until it ends naturally, <strong>OR</strong> click the red <strong>"Stop Sound (Too Annoying)"</strong> button the exact moment it becomes too annoying to tolerate.</p>
+
+      <audio id="test-audio" preload="auto"></audio>
+
+      <button id="play-btn" class="btn btn-play-main" onclick="playCurrentSound()">▶ Play Sound Clip</button>
+
+      <div id="playing-controls" class="hidden">
+        <div class="status-banner">🔊 Playing sound clip...</div>
+        <button id="stop-btn" class="btn btn-stop" onclick="stopSoundEarly()">Stop Sound (Too Annoying)</button>
+      </div>
     </div>
 
     <!-- STEP 2: EVALUATION SCREEN -->
@@ -181,7 +190,6 @@
       presentation_order: ""
     };
 
-    // Build 0-10 scale buttons
     const scaleContainer = document.getElementById("annoyance-scale");
     for (let i = 0; i <= 10; i++) {
       const lbl = document.createElement("label");
@@ -234,21 +242,15 @@
       document.getElementById("step-rest").classList.add("hidden");
       document.getElementById("step-listen").classList.remove("hidden");
 
+      document.getElementById("play-btn").classList.remove("hidden");
+      document.getElementById("playing-controls").classList.add("hidden");
+
       const audioEl = document.getElementById("test-audio");
-      const stopBtn = document.getElementById("stop-btn");
-      stopBtn.disabled = true;
       playStartTime = null;
       stoppedEarlyFlag = false;
 
       audioEl.src = currentSound.file;
       audioEl.load();
-
-      audioEl.onplay = () => {
-        if (!playStartTime) {
-          playStartTime = performance.now();
-        }
-        stopBtn.disabled = false;
-      };
 
       audioEl.onended = () => {
         if (!stoppedEarlyFlag) {
@@ -257,6 +259,14 @@
           goToEvaluation(false);
         }
       };
+    }
+
+    function playCurrentSound() {
+      const audioEl = document.getElementById("test-audio");
+      document.getElementById("play-btn").classList.add("hidden");
+      document.getElementById("playing-controls").classList.remove("hidden");
+      playStartTime = performance.now();
+      audioEl.play();
     }
 
     function stopSoundEarly() {
@@ -273,12 +283,10 @@
       document.getElementById("eval-progress").textContent = `Sound ${currentIndex + 1} of 12 — Evaluation`;
       document.getElementById("eval-error").textContent = "";
 
-      // Reset form inputs
       document.querySelectorAll('input[name="annoyance"]').forEach(el => el.checked = false);
       document.querySelectorAll('input[name="stop_reason"]').forEach(el => el.checked = false);
       document.getElementById("association-input").value = "";
 
-      // Auto-select "Did not stop early" if full clip played
       if (!wasStoppedEarly) {
         const fullRadio = document.querySelector('input[name="stop_reason"][value="Did not stop early"]');
         if (fullRadio) fullRadio.checked = true;
@@ -333,7 +341,6 @@
       document.getElementById("step-eval").classList.add("hidden");
       document.getElementById("step-done").classList.remove("hidden");
 
-      // Order columns cleanly S01..S12 before sending to Google Sheets
       const orderedPayload = {
         timestamp: results.timestamp,
         gender: results.gender,
