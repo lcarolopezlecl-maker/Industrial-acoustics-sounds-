@@ -1,319 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acoustics Disturbance Tolerance Test</title>
-<style>
-  body { font-family: system-ui, -apple-system, sans-serif; max-width: 680px; margin: 30px auto; padding: 16px; background: #f4f6f9; color: #222; }
-  .card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
-  h2 { margin-top: 0; text-align: center; }
-  .center { text-align: center; }
-  button { padding: 13px 24px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; margin: 6px; font-weight: 600; transition: opacity 0.2s, transform 0.1s; }
-  button:active { transform: scale(0.98); }
-  .btn-primary { background: #0d6efd; color: #fff; }
-  .btn-stop { background: #dc3545; color: #fff; display: none; font-size: 17px; padding: 16px 28px; }
-  .btn-next { background: #198754; color: #fff; }
-  .status { font-size: 16px; margin: 18px 0; line-height: 1.5; background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef; text-align: center; }
-  .badge { display: inline-block; background: #e7f1ff; color: #084298; padding: 4px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
-  .form-group { margin-bottom: 18px; text-align: left; }
-  .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 15px; }
-  select, input[type="text"] { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
-  .scale-row { display: flex; justify-content: space-between; gap: 4px; margin-top: 6px; }
-  .scale-btn { flex: 1; padding: 10px 0; margin: 0; background: #e9ecef; color: #222; border-radius: 6px; font-size: 14px; }
-  .scale-btn.selected { background: #0d6efd; color: #fff; }
-  .scale-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-top: 4px; }
-  .radio-option { display: block; background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
-  .radio-option input { margin-right: 10px; }
-  .hidden { display: none; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industrial Acoustics Listening Test</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f4f6f9; color: #1e293b; margin: 0; padding: 24px; display: flex; justify-content: center; }
+    .container { background: #ffffff; max-width: 680px; width: 100%; padding: 32px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { margin-top: 0; font-size: 1.5rem; color: #0f172a; }
+    h2 { font-size: 1.2rem; color: #0f172a; }
+    p { line-height: 1.55; color: #334155; }
+    .gdpr-box { background: #f1f5f9; border-left: 4px solid #2563eb; padding: 12px 16px; border-radius: 6px; font-size: 0.9rem; margin: 16px 0; }
+    .question { margin-bottom: 20px; }
+    .question label.q-title { display: block; font-weight: 600; margin-bottom: 8px; color: #0f172a; }
+    .radio-group label { display: block; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; }
+    .radio-group label:hover { background: #f8fafc; }
+    .likert-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .likert-row label { flex: 1 1 42px; text-align: center; padding: 8px 4px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    .likert-row input:checked + span, .radio-group input:checked + span { font-weight: 700; color: #1d4ed8; }
+    input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+    audio { width: 100%; margin: 12px 0; }
+    .btn { background: #2563eb; color: #fff; border: none; padding: 12px 22px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 8px; }
+    .btn:hover { background: #1d4ed8; }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-stop { background: #dc2626; width: 100%; font-size: 1.05rem; padding: 14px; }
+    .btn-stop:hover { background: #b91c1c; }
+    .progress { font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .hidden { display: none; }
+    .error { color: #dc2626; font-weight: 600; margin-top: 10px; }
+    .timer-box { text-align: center; padding: 24px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .timer-num { font-size: 2rem; font-weight: 700; color: #2563eb; }
+  </style>
 </head>
 <body>
-<div class="card">
-  <div class="center">
-    <div class="badge" id="stepBadge">Step 0 of 12 — Setup & Calibration</div>
-    <h2 id="title">Volume Calibration & Participant Info</h2>
-  </div>
-
-  <!-- STEP 0: CALIBRATION & DEMOGRAPHICS -->
-  <div id="setupScreen">
-    <div class="status">
-      Sit in a quiet room. Play the voice check below and adjust your volume to a comfortable conversational level. <strong>Do not change your volume afterward.</strong><br><br>
-      <button class="btn-primary" type="button" onclick="playCalibration()">▶ Play Volume Check</button>
-    </div>
-
-    <div class="form-group">
-      <label>1. Gender</label>
-      <select id="gender">
-        <option value="">-- Select --</option>
-        <option value="Female">Female</option>
-        <option value="Male">Male</option>
-        <option value="Non-binary/Other">Non-binary / Other</option>
-        <option value="Prefer not to say">Prefer not to say</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>2. Age group</label>
-      <select id="age">
-        <option value="">-- Select --</option>
-        <option value="18-25">18–25</option>
-        <option value="26-35">26–35</option>
-        <option value="36-50">36–50</option>
-        <option value="51+">51+</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>3. Playback device</label>
-      <select id="device">
-        <option value="">-- Select --</option>
-        <option value="Headphones">Headphones (Over-ear / Earbuds)</option>
-        <option value="Laptop/Phone speakers">Laptop / Phone speakers</option>
-        <option value="External speakers">External desk speakers</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>4. General noise sensitivity: "I am easily bothered by everyday background noises."</label>
-      <div class="scale-row" id="sensScale">
-        <button type="button" class="scale-btn" onclick="selectScale('sens', 1, this)">1</button>
-        <button type="button" class="scale-btn" onclick="selectScale('sens', 2, this)">2</button>
-        <button type="button" class="scale-btn" onclick="selectScale('sens', 3, this)">3</button>
-        <button type="button" class="scale-btn" onclick="selectScale('sens', 4, this)">4</button>
-        <button type="button" class="scale-btn" onclick="selectScale('sens', 5, this)">5</button>
+  <div class="container" id="app">
+    <!-- STEP 0: WELCOME & DEMOGRAPHICS -->
+    <div id="step-welcome">
+      <h1>Industrial Acoustics Perception Test</h1>
+      <p>Thank you for participating in our listening study! You will listen to <strong>12 short sound clips</strong> (around 5–7 minutes total).</p>
+      <div class="gdpr-box">
+        <strong>Privacy & Consent (GDPR):</strong> Participation is voluntary and completely anonymous. No personally identifiable information (name, email, or IP address) is collected, and responses are used solely for an academic course project at the University of Southern Denmark (SDU).
       </div>
-      <div class="scale-labels"><span>1 = Strongly disagree</span><span>5 = Strongly agree</span></div>
-    </div>
 
-    <div class="center">
-      <button class="btn-next" type="button" onclick="startExperiment()">Start Listening Test →</button>
-    </div>
-  </div>
-
-  <!-- AUDIO PLAYER SCREEN -->
-  <div id="audioScreen" class="hidden center">
-    <div class="status" id="statusText">
-      Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.
-    </div>
-    <button class="btn-primary" id="playBtn" onclick="startSound()">▶ Play Sound</button>
-    <button class="btn-stop" id="stopBtn" onclick="stopSound(false)">⏹ Stop (Too Annoying / Uncomfortable)</button>
-  </div>
-
-  <!-- PER-SOUND QUESTIONS SCREEN -->
-  <div id="questionScreen" class="hidden">
-    <div class="status" id="recordedBanner"></div>
-
-    <div class="form-group">
-      <label>1. How much did this sound bother, disturb, or annoy you? (0–10)</label>
-      <div class="scale-row" id="annoyScale">
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 0, this)">0</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 1, this)">1</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 2, this)">2</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 3, this)">3</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 4, this)">4</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 5, this)">5</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 6, this)">6</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 7, this)">7</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 8, this)">8</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 9, this)">9</button>
-        <button type="button" class="scale-btn" onclick="selectScale('annoy', 10, this)">10</button>
+      <div class="question">
+        <label class="q-title">Step 1: Volume Calibration</label>
+        <p>Please use <strong>laptop/PC speakers</strong> if possible. Play the calibration clip below and set your computer volume to a comfortable conversational level, then leave your volume unchanged for the rest of the test.</p>
+        <audio id="vol-audio" controls src="volumecheck.mp3"></audio>
       </div>
-      <div class="scale-labels"><span>0 = Not at all</span><span>10 = Extremely</span></div>
+
+      <div class="question">
+        <label class="q-title">1. What is your gender?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="Female"> <span>Female</span></label>
+          <label><input type="radio" name="gender" value="Male"> <span>Male</span></label>
+          <label><input type="radio" name="gender" value="Non-binary / Other"> <span>Non-binary / Other</span></label>
+          <label><input type="radio" name="gender" value="Prefer not to say"> <span>Prefer not to say</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q-title">2. What is your age group?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="age" value="18-25"> <span>18–25</span></label>
+          <label><input type="radio" name="age" value="26-35"> <span>26–35</span></label>
+          <label><input type="radio" name="age" value="36-50"> <span>36–50</span></label>
+          <label><input type="radio" name="age" value="51+"> <span>51+</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q-title">3. Which audio playback device are you currently using?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="device" value="Laptop / PC built-in speakers"> <span>Laptop / PC built-in speakers</span></label>
+          <label><input type="radio" name="device" value="External desk speakers"> <span>External desk speakers</span></label>
+          <label><input type="radio" name="device" value="Headphones"> <span>Headphones (Over-ear / Earbuds)</span></label>
+          <label><input type="radio" name="device" value="Phone / Tablet speakers"> <span>Phone / Tablet speakers</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q-title">4. "In general, I am easily bothered by everyday background noises."</label>
+        <div class="radio-group">
+          <label><input type="radio" name="sensitivity" value="1 - Strongly disagree"> <span>1 – Strongly disagree</span></label>
+          <label><input type="radio" name="sensitivity" value="2 - Disagree"> <span>2 – Disagree</span></label>
+          <label><input type="radio" name="sensitivity" value="3 - Neutral"> <span>3 – Neutral</span></label>
+          <label><input type="radio" name="sensitivity" value="4 - Agree"> <span>4 – Agree</span></label>
+          <label><input type="radio" name="sensitivity" value="5 - Strongly agree"> <span>5 – Strongly agree</span></label>
+        </div>
+      </div>
+
+      <button class="btn" onclick="startExperiment()">Start Listening Test →</button>
+      <div id="welcome-error" class="error"></div>
     </div>
 
-    <div class="form-group hidden" id="reasonGroup">
-      <label>2. Why did you stop the sound?</label>
-      <label class="radio-option"><input type="radio" name="stopReason" value="Uncomfortable/Painful"> It became physically uncomfortable or painful</label>
-      <label class="radio-option"><input type="radio" name="stopReason" value="Irritating/Distracting"> It was too irritating or distracting</label>
-      <label class="radio-option"><input type="radio" name="stopReason" value="Anxious/Stressed"> It made me feel anxious or stressed</label>
+    <!-- STEP 1: LISTENING SCREEN -->
+    <div id="step-listen" class="hidden">
+      <div class="progress" id="listen-progress">Sound 1 of 12</div>
+      <h2>Listen to the Sound Clip</h2>
+      <p>Press <strong>Play</strong> below. Listen until the clip finishes naturally, <strong>OR</strong> click the red <strong>"Stop Sound (Too Annoying)"</strong> button the exact moment it becomes too annoying to tolerate.</p>
+      <audio id="test-audio" controls></audio>
+      <button id="stop-btn" class="btn btn-stop" onclick="stopSoundEarly()" disabled>Stop Sound (Too Annoying)</button>
     </div>
 
-    <div class="form-group">
-      <label id="assocLabel">3. What object, machine, or color did this sound remind you of? (Optional)</label>
-      <input type="text" id="assocInput" placeholder="e.g., drill, mosquito, alarm, sharp yellow...">
+    <!-- STEP 2: EVALUATION SCREEN -->
+    <div id="step-eval" class="hidden">
+      <div class="progress" id="eval-progress">Sound 1 of 12 — Evaluation</div>
+      <h2>Rate This Sound</h2>
+
+      <div class="question">
+        <label class="q-title">1. How much did this sound bother, disturb, or annoy you? (0 = Not at all, 10 = Extremely)</label>
+        <div class="likert-row" id="annoyance-scale"></div>
+      </div>
+
+      <div class="question">
+        <label class="q-title">2. If you stopped the sound early, why did you stop it?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="stop_reason" value="Did not stop early"> <span>I did not stop early (listened to the full clip)</span></label>
+          <label><input type="radio" name="stop_reason" value="Physically uncomfortable or painful"> <span>It became physically uncomfortable or painful</span></label>
+          <label><input type="radio" name="stop_reason" value="Too irritating or distracting"> <span>It was too irritating or distracting</span></label>
+          <label><input type="radio" name="stop_reason" value="Anxious or stressed"> <span>It made me feel anxious or stressed</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q-title">3. What object, machine, or color did this sound remind you of? (Optional)</label>
+        <input type="text" id="association-input" placeholder="e.g., dental drill, neon yellow, vacuum cleaner..." />
+      </div>
+
+      <button class="btn" onclick="submitEvaluation()">Continue →</button>
+      <div id="eval-error" class="error"></div>
     </div>
 
-    <div class="center">
-      <button class="btn-next" type="button" onclick="submitSoundAnswers()">Save & Continue →</button>
+    <!-- STEP 3: REST TIMER -->
+    <div id="step-rest" class="hidden">
+      <div class="timer-box">
+        <h2>Short Auditory Rest</h2>
+        <p>Please rest your ears for a few seconds before the next sound clip.</p>
+        <div class="timer-num" id="rest-countdown">15s</div>
+      </div>
+    </div>
+
+    <!-- STEP 4: SUBMITTING / THANK YOU -->
+    <div id="step-done" class="hidden">
+      <h2 id="done-title">Saving your responses...</h2>
+      <p id="done-msg">Please wait a moment while your data is securely recorded.</p>
     </div>
   </div>
 
-  <!-- COOLDOWN SCREEN -->
-  <div id="cooldownScreen" class="hidden center">
-    <div class="status" id="cooldownText"></div>
-    <button class="btn-next hidden" id="nextBtn" onclick="prepareNext()">Continue to Next Sound →</button>
-  </div>
+  <script>
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby6vTKGzJJfCLThOdaDOtCCycrrL43DClmUPQ0_Q9xm5gt92ryhGAUAIMEBFSZiqJZv/exec";
 
-  <audio id="player"></audio>
-</div>
+    const sounds = [
+      { id: "S01", file: "sound01.mp3" },
+      { id: "S02", file: "sound02.mp3" },
+      { id: "S03", file: "sound03.mp3" },
+      { id: "S04", file: "sound04.mp3" },
+      { id: "S05", file: "sound05.mp3" },
+      { id: "S06", file: "sound06.mp3" },
+      { id: "S07", file: "sound07.mp3" },
+      { id: "S08", file: "sound08.mp3" },
+      { id: "S09", file: "sound09.mp3" },
+      { id: "S10", file: "sound10.mp3" },
+      { id: "S11", file: "sound11.mp3" },
+      { id: "S12", file: "sound12.mp3" }
+    ];
 
-<script>
-  // PASTE YOUR SURVEYXACT SELFCREATION LINK BELOW:
-  const SURVEYXACT_URL = "https://www.survey-xact.dk/LinkCollector?key=5TG69D7CJJCK";
+    let randomizedSounds = [];
+    let currentIndex = 0;
+    let playStartTime = null;
+    let currentListenDurationSec = 0;
+    let stoppedEarlyFlag = false;
 
-  const sounds = [
-    { num: "01", file: "sound01.mp3" }, { num: "02", file: "sound02.mp3" },
-    { num: "03", file: "sound03.mp3" }, { num: "04", file: "sound04.mp3" },
-    { num: "05", file: "sound05.mp3" }, { num: "06", file: "sound06.mp3" },
-    { num: "07", file: "sound07.mp3" }, { num: "08", file: "sound08.mp3" },
-    { num: "09", file: "sound09.mp3" }, { num: "10", file: "sound10.mp3" },
-    { num: "11", file: "sound11.mp3" }, { num: "12", file: "sound12.mp3" }
-  ];
+    const results = {
+      timestamp: new Date().toISOString(),
+      gender: "",
+      age: "",
+      device: "",
+      sensitivity: "",
+      presentation_order: ""
+    };
 
-  // Unbiased Fisher-Yates shuffle
-  for (let i = sounds.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [sounds[i], sounds[j]] = [sounds[j], sounds[i]];
-  }
-
-  let currentIndex = 0;
-  let calPlayed = false;
-  let tempScale = { sens: null, annoy: null };
-  let wasStoppedEarly = false;
-  let results = {};
-  let playOrder = [];
-  const player = document.getElementById("player");
-
-  function playCalibration() {
-    player.src = "volumecheck.mp3";
-    player.play();
-    calPlayed = true;
-  }
-
-  function selectScale(type, val, btn) {
-    tempScale[type] = val;
-    const container = btn.parentElement;
-    container.querySelectorAll(".scale-btn").forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
-  }
-
-  function startExperiment() {
-    const gender = document.getElementById("gender").value;
-    const age = document.getElementById("age").value;
-    const device = document.getElementById("device").value;
-    if (!calPlayed) { alert("Please play the Volume Check first."); return; }
-    if (!gender || !age || !device || tempScale.sens === null) {
-      alert("Please answer all 4 initial questions before starting.");
-      return;
+    // Build 0-10 scale buttons
+    const scaleContainer = document.getElementById("annoyance-scale");
+    for (let i = 0; i <= 10; i++) {
+      const lbl = document.createElement("label");
+      lbl.innerHTML = `<input type="radio" name="annoyance" value="${i}"> <span>${i}</span>`;
+      scaleContainer.appendChild(lbl);
     }
-    player.pause();
-    results["gender"] = gender;
-    results["age"] = age;
-    results["device"] = device;
-    results["sensitivity"] = tempScale.sens;
 
-    document.getElementById("setupScreen").classList.add("hidden");
-    showAudioScreen();
-  }
-
-  function showAudioScreen() {
-    document.getElementById("stepBadge").innerText = `Sound ${currentIndex + 1} of 12`;
-    document.getElementById("title").innerText = `Listening Clip #${currentIndex + 1}`;
-    document.getElementById("audioScreen").classList.remove("hidden");
-    document.getElementById("playBtn").style.display = "inline-block";
-    document.getElementById("stopBtn").style.display = "none";
-    document.getElementById("statusText").innerHTML =
-      "Press <strong>Play Sound</strong>. Listen until the clip ends naturally, OR press <strong>Stop</strong> the exact moment it becomes too annoying to tolerate.";
-  }
-
-  function startSound() {
-    const current = sounds[currentIndex];
-    player.src = current.file;
-    player.play();
-    document.getElementById("playBtn").style.display = "none";
-    document.getElementById("stopBtn").style.display = "inline-block";
-    document.getElementById("statusText").innerHTML =
-      "<strong>Playing...</strong><br>Click <em>Stop</em> immediately if you no longer want to tolerate this sound.";
-    player.onended = () => stopSound(true);
-  }
-
-  function stopSound(completedFullClip) {
-    const elapsed = completedFullClip ? player.duration.toFixed(2) : player.currentTime.toFixed(2);
-    player.pause();
-    player.onended = null;
-
-    const current = sounds[currentIndex];
-    results[`t_s${current.num}`] = elapsed;
-    playOrder.push(current.num);
-    wasStoppedEarly = !completedFullClip;
-
-    tempScale.annoy = null;
-    document.querySelectorAll("#annoyScale .scale-btn").forEach(b => b.classList.remove("selected"));
-    document.querySelectorAll('input[name="stopReason"]').forEach(r => r.checked = false);
-    document.getElementById("assocInput").value = "";
-
-    document.getElementById("audioScreen").classList.add("hidden");
-    document.getElementById("questionScreen").classList.remove("hidden");
-    document.getElementById("recordedBanner").innerHTML = `Listening time recorded: <strong>${elapsed}s</strong>`;
-
-    if (wasStoppedEarly) {
-      document.getElementById("reasonGroup").classList.remove("hidden");
-      document.getElementById("assocLabel").innerText = "3. What object, machine, or color did this sound remind you of? (Optional)";
-    } else {
-      document.getElementById("reasonGroup").classList.add("hidden");
-      document.getElementById("assocLabel").innerText = "2. What object, machine, or color did this sound remind you of? (Optional)";
+    function getRadioValue(name) {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? el.value : null;
     }
-  }
 
-  function submitSoundAnswers() {
-    if (tempScale.annoy === null) {
-      alert("Please select an annoyance rating from 0 to 10.");
-      return;
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
     }
-    let reasonVal = "Completed";
-    if (wasStoppedEarly) {
-      const checked = document.querySelector('input[name="stopReason"]:checked');
-      if (!checked) {
-        alert("Please select why you stopped the sound.");
+
+    function startExperiment() {
+      const gender = getRadioValue("gender");
+      const age = getRadioValue("age");
+      const device = getRadioValue("device");
+      const sensitivity = getRadioValue("sensitivity");
+
+      if (!gender || !age || !device || !sensitivity) {
+        document.getElementById("welcome-error").textContent = "Please answer all 4 questions before starting.";
         return;
       }
-      reasonVal = checked.value;
+
+      document.getElementById("vol-audio").pause();
+      results.gender = gender;
+      results.age = age;
+      results.device = device;
+      results.sensitivity = sensitivity;
+
+      randomizedSounds = shuffleArray(sounds);
+      results.presentation_order = randomizedSounds.map(s => s.id).join(",");
+
+      document.getElementById("step-welcome").classList.add("hidden");
+      loadSoundTrial();
     }
 
-    const current = sounds[currentIndex];
-    results[`annoy_s${current.num}`] = tempScale.annoy;
-    results[`reason_s${current.num}`] = reasonVal;
-    results[`assoc_s${current.num}`] = document.getElementById("assocInput").value.trim() || "None";
+    function loadSoundTrial() {
+      const currentSound = randomizedSounds[currentIndex];
+      document.getElementById("listen-progress").textContent = `Sound ${currentIndex + 1} of 12`;
+      document.getElementById("step-eval").classList.add("hidden");
+      document.getElementById("step-rest").classList.add("hidden");
+      document.getElementById("step-listen").classList.remove("hidden");
 
-    document.getElementById("questionScreen").classList.add("hidden");
+      const audioEl = document.getElementById("test-audio");
+      const stopBtn = document.getElementById("stop-btn");
+      stopBtn.disabled = true;
+      playStartTime = null;
+      stoppedEarlyFlag = false;
 
-    if (currentIndex === sounds.length - 1) {
-      finishExperiment();
-      return;
+      audioEl.src = currentSound.file;
+      audioEl.load();
+
+      audioEl.onplay = () => {
+        if (!playStartTime) {
+          playStartTime = performance.now();
+        }
+        stopBtn.disabled = false;
+      };
+
+      audioEl.onended = () => {
+        if (!stoppedEarlyFlag) {
+          const elapsed = playStartTime ? (performance.now() - playStartTime) / 1000 : audioEl.duration;
+          currentListenDurationSec = Number(elapsed.toFixed(3));
+          goToEvaluation(false);
+        }
+      };
     }
 
-    document.getElementById("cooldownScreen").classList.remove("hidden");
-    document.getElementById("nextBtn").classList.add("hidden");
-    let cooldown = 15;
-    document.getElementById("cooldownText").innerHTML =
-      `Answers saved.<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
+    function stopSoundEarly() {
+      const audioEl = document.getElementById("test-audio");
+      stoppedEarlyFlag = true;
+      audioEl.pause();
+      const elapsed = playStartTime ? (performance.now() - playStartTime) / 1000 : 0;
+      currentListenDurationSec = Number(elapsed.toFixed(3));
+      goToEvaluation(true);
+    }
 
-    const timer = setInterval(() => {
-      cooldown--;
-      if (cooldown > 0) {
-        document.getElementById("cooldownText").innerHTML =
-          `Answers saved.<br>Please rest your ears for <strong>${cooldown}s</strong> before the next sound...`;
-      } else {
-        clearInterval(timer);
-        document.getElementById("cooldownText").innerHTML = "Rest complete. Click below when ready.";
-        document.getElementById("nextBtn").classList.remove("hidden");
+    function goToEvaluation(wasStoppedEarly) {
+      document.getElementById("step-listen").classList.add("hidden");
+      document.getElementById("eval-progress").textContent = `Sound ${currentIndex + 1} of 12 — Evaluation`;
+      document.getElementById("eval-error").textContent = "";
+
+      // Reset form inputs
+      document.querySelectorAll('input[name="annoyance"]').forEach(el => el.checked = false);
+      document.querySelectorAll('input[name="stop_reason"]').forEach(el => el.checked = false);
+      document.getElementById("association-input").value = "";
+
+      // Auto-select "Did not stop early" if full clip played
+      if (!wasStoppedEarly) {
+        const fullRadio = document.querySelector('input[name="stop_reason"][value="Did not stop early"]');
+        if (fullRadio) fullRadio.checked = true;
       }
-    }, 1000);
-  }
 
-  function prepareNext() {
-    currentIndex++;
-    document.getElementById("cooldownScreen").classList.add("hidden");
-    showAudioScreen();
-  }
+      document.getElementById("step-eval").classList.remove("hidden");
+    }
 
-  function finishExperiment() {
-    results["play_order"] = playOrder.join("-");
-    const params = new URLSearchParams(results).toString();
-    const sep = SURVEYXACT_URL.includes("?") ? "&" : "?";
-    window.location.href = `${SURVEYXACT_URL}${sep}${params}`;
-  }
-</script>
+    function submitEvaluation() {
+      const annoyance = getRadioValue("annoyance");
+      const stopReason = getRadioValue("stop_reason");
+      const association = document.getElementById("association-input").value.trim();
+
+      if (annoyance === null || !stopReason) {
+        document.getElementById("eval-error").textContent = "Please select an annoyance score (0–10) and a stop reason.";
+        return;
+      }
+
+      const soundId = randomizedSounds[currentIndex].id;
+      results[`${soundId}_time_sec`] = currentListenDurationSec;
+      results[`${soundId}_stopped_early`] = stoppedEarlyFlag ? "Yes" : "No";
+      results[`${soundId}_annoyance`] = Number(annoyance);
+      results[`${soundId}_reason`] = stopReason;
+      results[`${soundId}_association`] = association || "";
+
+      currentIndex++;
+
+      if (currentIndex < randomizedSounds.length) {
+        startRestTimer();
+      } else {
+        finishAndSave();
+      }
+    }
+
+    function startRestTimer() {
+      document.getElementById("step-eval").classList.add("hidden");
+      document.getElementById("step-rest").classList.remove("hidden");
+      let secondsLeft = 15;
+      document.getElementById("rest-countdown").textContent = `${secondsLeft}s`;
+
+      const interval = setInterval(() => {
+        secondsLeft--;
+        document.getElementById("rest-countdown").textContent = `${secondsLeft}s`;
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+          loadSoundTrial();
+        }
+      }, 1000);
+    }
+
+    function finishAndSave() {
+      document.getElementById("step-eval").classList.add("hidden");
+      document.getElementById("step-done").classList.remove("hidden");
+
+      // Order columns cleanly S01..S12 before sending to Google Sheets
+      const orderedPayload = {
+        timestamp: results.timestamp,
+        gender: results.gender,
+        age: results.age,
+        device: results.device,
+        sensitivity: results.sensitivity,
+        presentation_order: results.presentation_order
+      };
+
+      sounds.forEach(s => {
+        orderedPayload[`${s.id}_time_sec`] = results[`${s.id}_time_sec`];
+        orderedPayload[`${s.id}_stopped_early`] = results[`${s.id}_stopped_early`];
+        orderedPayload[`${s.id}_annoyance`] = results[`${s.id}_annoyance`];
+        orderedPayload[`${s.id}_reason`] = results[`${s.id}_reason`];
+        orderedPayload[`${s.id}_association`] = results[`${s.id}_association`];
+      });
+
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderedPayload)
+      })
+      .then(() => {
+        document.getElementById("done-title").textContent = "Thank you for participating!";
+        document.getElementById("done-msg").textContent = "Your responses have been successfully recorded. You may now close this tab.";
+      })
+      .catch(() => {
+        document.getElementById("done-title").textContent = "Submission issue";
+        document.getElementById("done-msg").textContent = "There was a connection error saving your responses. Please check your internet connection.";
+      });
+    }
+  </script>
 </body>
 </html>
