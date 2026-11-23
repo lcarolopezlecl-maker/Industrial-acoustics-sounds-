@@ -38,7 +38,7 @@
     <!-- STEP 0: WELCOME & DEMOGRAPHICS -->
     <div id="step-welcome">
       <h1>Industrial Acoustics Perception Test</h1>
-      <p>Thank you for participating in our listening study! You will listen to <strong>12 short sound clips</strong> (around 5–7 minutes total).</p>
+      <p>Thank you for participating in our listening study! You will listen to <strong>12 short sound clips</strong> (around 4–6 minutes total).</p>
       <div class="gdpr-box">
         <strong>Privacy & Consent (GDPR):</strong> Participation is voluntary and completely anonymous. No personally identifiable information (name, email, or IP address) is collected, and responses are used solely for an academic course project at the University of Southern Denmark (SDU).
       </div>
@@ -137,7 +137,7 @@
       <div class="timer-box">
         <h2>Short Auditory Rest</h2>
         <p>Please rest your ears for a few seconds before the next sound clip.</p>
-        <div class="timer-num" id="rest-countdown">15s</div>
+        <div class="timer-num" id="rest-countdown">10s</div>
       </div>
     </div>
 
@@ -316,7 +316,7 @@
     function startRestTimer() {
       document.getElementById("step-eval").classList.add("hidden");
       document.getElementById("step-rest").classList.remove("hidden");
-      let secondsLeft = 15;
+      let secondsLeft = 10;
       document.getElementById("rest-countdown").textContent = `${secondsLeft}s`;
 
       const interval = setInterval(() => {
